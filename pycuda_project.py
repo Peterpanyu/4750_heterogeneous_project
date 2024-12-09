@@ -140,16 +140,24 @@ def dijkstra(graph, src):
     te = time()
     return dist,(te - ts) * 1e3
 
+# Function to generate a large random graph
+def generate_large_graph(num_vertices, edge_density=0.1, weight_range=(1, 100)):
+    graph = np.zeros((num_vertices, num_vertices), dtype=np.int32)
+    for i in range(num_vertices):
+        for j in range(i + 1, num_vertices):
+            if np.random.rand() < edge_density:
+                weight = np.random.randint(weight_range[0], weight_range[1] + 1)
+                graph[i, j] = weight
+                graph[j, i] = weight
+    return graph
 
 # Example usage
 if __name__ == "__main__":
-    graph = [
-        [0, 10, 20, 0, 0],
-        [10, 0, 5, 16, 0],
-        [20, 5, 0, 2, 0],
-        [0, 16, 2, 0, 3],
-        [0, 0, 0, 3, 0]
-    ]
+    num_vertices = 10000  # Adjust for larger or smaller graphs
+    edge_density = 0.05  # Probability of an edge existing
+    weight_range = (1, 100)
+
+    graph = generate_large_graph(num_vertices, edge_density, weight_range)
     src = 0
 
     shortest_distances , GPU_time = dijkstra_gpu(graph, src)
