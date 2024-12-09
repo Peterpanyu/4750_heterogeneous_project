@@ -14,7 +14,7 @@ from pycuda.compiler import SourceModule
 
 #import relevant pycuda modules
 kernel_code = """
-__global__ void dijkstra(int *graph, int *dist, int *visited, int vertices, int src) {
+__global__ void dijkstra(int *graph, int *dist, int *visited, int vertices, int src, float smoothing_factor) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
     if (tid >= vertices) return;
@@ -46,6 +46,7 @@ __global__ void dijkstra(int *graph, int *dist, int *visited, int vertices, int 
 
         if (u != -1 && !visited[tid] && graph[u * vertices + tid] != 0) {
             int newDist = dist[u] + graph[u * vertices + tid];
+            newDist = (int)(newDist * smoothing_factor); // Apply smoothing
             if (newDist < dist[tid]) {
                 dist[tid] = newDist;
             }
@@ -57,7 +58,7 @@ __global__ void dijkstra(int *graph, int *dist, int *visited, int vertices, int 
 """
 
 # Initialize graph and parameters
-def dijkstra_gpu(graph, src):
+def dijkstra_gpu(graph, src, smoothing_factor = 1.0):
     start = cuda.Event()
     end = cuda.Event()
     vertices = len(graph)
@@ -83,7 +84,7 @@ def dijkstra_gpu(graph, src):
     # Launch kernel
     block_size = 256
     grid_size = (vertices + block_size - 1) // block_size
-    dijkstra(graph_gpu, dist_gpu, visited_gpu, np.int32(vertices), np.int32(src),
+    dijkstra(graph_gpu, dist_gpu, visited_gpu, np.int32(vertices), np.int32(src),np.float32(smoothing_factor),
              block=(block_size, 1, 1), grid=(grid_size, 1))
     end.record()
     end.synchronize()
@@ -99,7 +100,7 @@ def dijkstra_gpu(graph, src):
     return dist,start.time_till(end)
 
 
-def dijkstra(graph, src):
+def dijkstra(graph, src,smoothing_factor = 1.0):
     """
     Find the shortest paths from src to all other vertices in a graph.
     
@@ -128,6 +129,9 @@ def dijkstra(graph, src):
                 min_dist = dist[i]
                 u = i
 
+        if u == -1:  # If no unvisited vertex is reachable, break
+            break
+
         # Mark the chosen vertex as visited
         visited[u] = True
 
@@ -135,6 +139,7 @@ def dijkstra(graph, src):
         for v in range(vertices):
             if graph[u][v] > 0 and not visited[v]:
                 new_dist = dist[u] + graph[u][v]
+                new_dist = int(new_dist * smoothing_factor)  # Apply smoothing
                 if new_dist < dist[v]:
                     dist[v] = new_dist
     te = time()
@@ -153,14 +158,24 @@ def generate_large_graph(num_vertices, edge_density=0.1, weight_range=(1, 100)):
 
 # Example usage
 if __name__ == "__main__":
-    num_vertices = 10000  # Adjust for larger or smaller graphs
-    edge_density = 0.05  # Probability of an edge existing
-    weight_range = (1, 100)
+    total_GPU_time = 0
+    total_CPU_time = 0
+    n = 10
+    for i in range(n):
+        num_vertices = 10000  # Adjust for larger or smaller graphs
+        edge_density = 0.05  # Probability of an edge existing
+        weight_range = (1, 100)
 
-    graph = generate_large_graph(num_vertices, edge_density, weight_range)
-    src = 0
+        graph = generate_large_graph(num_vertices, edge_density, weight_range)
+        src = 0
 
-    shortest_distances , GPU_time = dijkstra_gpu(graph, src)
-    shortest_distances_cpu ,CPU_time = dijkstra(graph,src)
-    print(f"GPU: Shortest distances from source {src}: {shortest_distances},the GPU time is: {GPU_time}")
-    print(f"CPU: Shortest distances from source {src}: {shortest_distances_cpu},the CPU time is: {CPU_time}")
+        shortest_distances , GPU_time = dijkstra_gpu(graph, src)
+        shortest_distances_cpu ,CPU_time = dijkstra(graph,src)
+        print(f"GPU: Shortest distances from source {src}: {shortest_distances},the GPU time is: {GPU_time}")
+        print(f"CPU: Shortest distances from source {src}: {shortest_distances_cpu},the CPU time is: {CPU_time}")
+        total_GPU_time += GPU_time
+        total_CPU_time += CPU_time
+    average_GPU_time = total_GPU_time/n
+    average_CPU_time = total_CPU_time/n
+    improvement = (average_CPU_time-average_GPU_time)/average_CPU_time*100
+    print(f"The average improvement with {n} iterations: {improvement}%")
