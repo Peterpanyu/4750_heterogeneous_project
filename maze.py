@@ -1,3 +1,7 @@
+#Used Recursive Backtracking Algorithm to generate the large size maze
+#Yu Pan
+#yp2742
+
 import random
 import matplotlib.pyplot as plt
 
@@ -43,15 +47,3 @@ def generate_maze(vertices):
             stack.pop()
 
     return maze
-
-def display_maze(maze):
-    # Display the maze using Matplotlib
-    plt.figure(figsize=(10, 10))
-    plt.imshow(maze, cmap='binary')  # Use binary colormap (0=black, 1=white)
-    plt.axis('off')
-    plt.show()
-
-# Generate and display a large maze
-width, height = 51, 51  # Maze dimensions (must be odd)
-maze = generate_maze(width, height)
-display_maze(maze)
