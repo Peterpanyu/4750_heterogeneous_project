@@ -160,7 +160,8 @@ def generate_large_graph(num_vertices, edge_density=0.1, weight_range=(1, 100)):
 if __name__ == "__main__":
     total_GPU_time = 0
     total_CPU_time = 0
-    n = 10
+    n = 5
+    m = 10
     for i in range(n):
         num_vertices = 10000  # Adjust for larger or smaller graphs
         edge_density = 0.05  # Probability of an edge existing
@@ -168,14 +169,16 @@ if __name__ == "__main__":
 
         graph = generate_large_graph(num_vertices, edge_density, weight_range)
         src = 0
-
-        shortest_distances , GPU_time = dijkstra_gpu(graph, src)
-        shortest_distances_cpu ,CPU_time = dijkstra(graph,src)
-        print(f"GPU: Shortest distances from source {src}: {shortest_distances},the GPU time is: {GPU_time}")
-        print(f"CPU: Shortest distances from source {src}: {shortest_distances_cpu},the CPU time is: {CPU_time}")
-        total_GPU_time += GPU_time
-        total_CPU_time += CPU_time
-    average_GPU_time = total_GPU_time/n
-    average_CPU_time = total_CPU_time/n
+        print(f"Graph number {i}:")
+        for j in range(m):
+            shortest_distances , GPU_time = dijkstra_gpu(graph, src)
+            shortest_distances_cpu ,CPU_time = dijkstra(graph,src)
+            print(f"iteration {j}:")
+            print(f"GPU: Shortest distances from source {src}: {shortest_distances},the GPU time is: {GPU_time}")
+            print(f"CPU: Shortest distances from source {src}: {shortest_distances_cpu},the CPU time is: {CPU_time}")
+            total_GPU_time += GPU_time
+            total_CPU_time += CPU_time
+    average_GPU_time = total_GPU_time/(n*m)
+    average_CPU_time = total_CPU_time/(n*m)
     improvement = (average_CPU_time-average_GPU_time)/average_CPU_time*100
-    print(f"The average improvement with {n} iterations: {improvement}%")
+    print(f"The average improvement with {n} graphs and {m} iterations: {improvement}%")
