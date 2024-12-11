@@ -2,6 +2,7 @@ import numpy as np
 import math
 import time
 import sys
+import random
 import matplotlib.pyplot as plt
 from functools import wraps
 from time import time
@@ -146,24 +147,57 @@ def dijkstra(graph, src,smoothing_factor = 1.0):
     return dist,(te - ts)*1000
 
 # Function to generate a large random graph
-def generate_large_graph(num_vertices, edge_density=0.1, weight_range=(1, 100)):
-    graph = np.zeros((num_vertices, num_vertices), dtype=np.int32)
-    for i in range(num_vertices):
-        for j in range(i + 1, num_vertices):
-            if np.random.rand() < edge_density:
-                weight = np.random.randint(weight_range[0], weight_range[1] + 1)
-                graph[i, j] = weight
-                graph[j, i] = weight
-    return graph
+def generate_maze(vertices):
+    height = vertices
+    width = vertices
+    # Initialize the maze grid
+    maze = [[1 for _ in range(width)] for _ in range(height)]
+    
+    # Starting position
+    stack = [(0, 0)]  # Stack for backtracking
+    maze[0][0] = 0  # Mark starting cell as a path
+
+    # Possible movement directions (row_offset, col_offset)
+    directions = [(-2, 0), (2, 0), (0, -2), (0, 2)]
+    
+    while stack:
+        current_cell = stack[-1]
+        x, y = current_cell
+
+        # Find all valid neighbors
+        neighbors = []
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < height and 0 <= ny < width and maze[nx][ny] == 1:
+                neighbors.append((nx, ny))
+        
+        if neighbors:
+            # Choose a random neighbor
+            nx, ny = random.choice(neighbors)
+            
+            # Remove the wall between the current cell and the chosen neighbor
+            wall_x, wall_y = (x + nx) // 2, (y + ny) // 2
+            maze[wall_x][wall_y] = 0
+            
+            # Mark the neighbor as part of the maze
+            maze[nx][ny] = 0
+            
+            # Push the neighbor to the stack
+            stack.append((nx, ny))
+        else:
+            # Backtrack if no valid neighbors
+            stack.pop()
+
+    return maze
 
 # Example usage
 if __name__ == "__main__":
     
     total_average_GPU_time=0
     total_average_CPU_time=0
-    n = 5
-    m = 10
-    vertices = [100,500,2500,12500]
+    n = 100
+    m = 100
+    vertices = [20,30,40,50,100,500,2500]
     gpu_time = []
     gpu_improve = []
     cpu_time = []
@@ -175,12 +209,10 @@ if __name__ == "__main__":
             total_GPU_time = 0
             total_CPU_time = 0
             # num_vertices = 1000  # Adjust for larger or smaller graphs
-            edge_density = 0.3  # Probability of an edge existing
-            weight_range = (1, 100)
             # print(f"Graph number {i}:")
             # print("Generating graphs...")
             # print(f"number of vertices: {num_vertices}")
-            graph = generate_large_graph(num_vertices, edge_density, weight_range)
+            graph = generate_maze(num_vertices)
             src = 0
             # print("Graph generated.")
             for j in range(m):
