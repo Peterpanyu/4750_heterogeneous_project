@@ -152,14 +152,14 @@ if __name__ == "__main__":
     total_average_GPU_time=0
     total_average_CPU_time=0
     n = 100
-    m = 100
-    vertices = [20,30,40,50,100,500,2500]
+    m = 10
+    size = [20,30,40,50,100,500,2500]
     gpu_time = []
     gpu_improve = []
     cpu_time = []
     speedup = []
 
-    for num_vertices in vertices:
+    for num_size in size:
 
         for i in range(n):
             total_GPU_time = 0
@@ -168,7 +168,7 @@ if __name__ == "__main__":
             # print(f"Graph number {i}:")
             # print("Generating graphs...")
             # print(f"number of vertices: {num_vertices}")
-            graph = generate_maze(num_vertices)
+            graph = generate_maze(num_size)
             src = 0
             # print("Graph generated.")
             for j in range(m):
@@ -191,14 +191,14 @@ if __name__ == "__main__":
         total_average_GPU_time = total_average_GPU_time/n
         total_average_CPU_time = total_average_CPU_time/n
         improvement = (total_average_CPU_time-total_average_GPU_time)/total_average_CPU_time*100
-        print(f"The average improvement with {num_vertices} vertices: {improvement}%")
+        print(f"The average improvement with {num_size} vertices: {improvement}%")
         print(f"The speedup factor is {total_average_CPU_time/total_average_GPU_time}")
         gpu_time.append(total_average_GPU_time)
         cpu_time.append(total_average_CPU_time)
         gpu_improve.append(improvement)
         speedup.append(total_average_CPU_time/total_average_GPU_time)
 
-    print("Graph size:",vertices)
+    print("Graph size:",size)
     print("GPU average time:",gpu_time)
     print("CPU average time:",cpu_time)
     print("Improvement",gpu_improve)

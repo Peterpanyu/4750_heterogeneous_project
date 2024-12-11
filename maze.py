@@ -5,9 +5,9 @@
 import random
 import matplotlib.pyplot as plt
 
-def generate_maze(vertices):
-    height = vertices
-    width = vertices
+def generate_maze(size):
+    height = size
+    width = size
     # Initialize the maze grid
     maze = [[1 for _ in range(width)] for _ in range(height)]
     
