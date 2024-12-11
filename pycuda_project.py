@@ -143,7 +143,7 @@ def dijkstra(graph, src,smoothing_factor = 1.0):
                 if new_dist < dist[v]:
                     dist[v] = new_dist
     te = time()
-    return dist,(te - ts) * 1e3
+    return dist,(te - ts)*1000
 
 # Function to generate a large random graph
 def generate_large_graph(num_vertices, edge_density=0.1, weight_range=(1, 100)):
@@ -158,27 +158,60 @@ def generate_large_graph(num_vertices, edge_density=0.1, weight_range=(1, 100)):
 
 # Example usage
 if __name__ == "__main__":
-    total_GPU_time = 0
-    total_CPU_time = 0
+    
+    total_average_GPU_time=0
+    total_average_CPU_time=0
     n = 5
     m = 10
-    for i in range(n):
-        num_vertices = 10000  # Adjust for larger or smaller graphs
-        edge_density = 0.05  # Probability of an edge existing
-        weight_range = (1, 100)
+    vertices = [100,500,2500,12500]
+    gpu_time = []
+    gpu_improve = []
+    cpu_time = []
+    speedup = []
 
-        graph = generate_large_graph(num_vertices, edge_density, weight_range)
-        src = 0
-        print(f"Graph number {i}:")
-        for j in range(m):
-            shortest_distances , GPU_time = dijkstra_gpu(graph, src)
-            shortest_distances_cpu ,CPU_time = dijkstra(graph,src)
-            print(f"iteration {j}:")
-            print(f"GPU: Shortest distances from source {src}: {shortest_distances},the GPU time is: {GPU_time}")
-            print(f"CPU: Shortest distances from source {src}: {shortest_distances_cpu},the CPU time is: {CPU_time}")
-            total_GPU_time += GPU_time
-            total_CPU_time += CPU_time
-    average_GPU_time = total_GPU_time/(n*m)
-    average_CPU_time = total_CPU_time/(n*m)
-    improvement = (average_CPU_time-average_GPU_time)/average_CPU_time*100
-    print(f"The average improvement with {n} graphs and {m} iterations: {improvement}%")
+    for num_vertices in vertices:
+
+        for i in range(n):
+            total_GPU_time = 0
+            total_CPU_time = 0
+            # num_vertices = 1000  # Adjust for larger or smaller graphs
+            edge_density = 0.3  # Probability of an edge existing
+            weight_range = (1, 100)
+            # print(f"Graph number {i}:")
+            # print("Generating graphs...")
+            # print(f"number of vertices: {num_vertices}")
+            graph = generate_large_graph(num_vertices, edge_density, weight_range)
+            src = 0
+            # print("Graph generated.")
+            for j in range(m):
+                # print(f"iteration {j}:")
+                shortest_distances , GPU_time = dijkstra_gpu(graph, src)
+                # print(f"GPU time is: {GPU_time}")
+                shortest_distances_cpu ,CPU_time = dijkstra(graph,src)
+                # print(f"CPU time is: {CPU_time}")
+                total_GPU_time += GPU_time
+                total_CPU_time += CPU_time
+            average_GPU_time = total_GPU_time/m
+            average_CPU_time = total_CPU_time/m
+            
+            # print(f"average GPU time is {average_GPU_time}ms")
+            # print(f"average CPU time is {average_CPU_time}ms")
+            # print(f"average improement is {(average_CPU_time-average_GPU_time)/average_CPU_time*100}%")
+
+            total_average_GPU_time += average_GPU_time
+            total_average_CPU_time += average_CPU_time
+        total_average_GPU_time = total_average_GPU_time/n
+        total_average_CPU_time = total_average_CPU_time/n
+        improvement = (total_average_CPU_time-total_average_GPU_time)/total_average_CPU_time*100
+        print(f"The average improvement with {num_vertices} vertices: {improvement}%")
+        print(f"The speedup factor is {total_average_CPU_time/total_average_GPU_time}")
+        gpu_time.append(total_average_GPU_time)
+        cpu_time.append(total_average_CPU_time)
+        gpu_improve.append(improvement)
+        speedup.append(total_average_CPU_time/total_average_GPU_time)
+
+    print("Graph size:",vertices)
+    print("GPU average time:",gpu_time)
+    print("CPU average time:",cpu_time)
+    print("Improvement",gpu_improve)
+    print("Speedup Factors:",speedup)
