@@ -191,14 +191,14 @@ if __name__ == "__main__":
         total_average_GPU_time = total_average_GPU_time/n
         total_average_CPU_time = total_average_CPU_time/n
         improvement = (total_average_CPU_time-total_average_GPU_time)/total_average_CPU_time*100
-        print(f"The average improvement with {num_size} vertices: {improvement}%")
+        print(f"The average improvement with {num_size}*{num_size} maze: {improvement}%")
         print(f"The speedup factor is {total_average_CPU_time/total_average_GPU_time}")
         gpu_time.append(total_average_GPU_time)
         cpu_time.append(total_average_CPU_time)
         gpu_improve.append(improvement)
         speedup.append(total_average_CPU_time/total_average_GPU_time)
 
-    print("Graph size:",size)
+    print("Maze size:",size)
     print("GPU average time:",gpu_time)
     print("CPU average time:",cpu_time)
     print("Improvement",gpu_improve)
