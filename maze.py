@@ -1,49 +1,75 @@
-#Used Recursive Backtracking Algorithm to generate the large size maze
+#Used randomized depth-first search (DFS) algorithm to generate the large size maze
 #Yu Pan
 #yp2742
 
 import random
-import matplotlib.pyplot as plt
 
 def generate_maze(size):
     height = size
     width = size
-    # Initialize the maze grid
-    maze = [[1 for _ in range(width)] for _ in range(height)]
-    
-    # Starting position
-    stack = [(0, 0)]  # Stack for backtracking
-    maze[0][0] = 0  # Mark starting cell as a path
+    """
+    Generate a maze with a guaranteed path from the top-left corner to the bottom-right corner.
 
-    # Possible movement directions (row_offset, col_offset)
-    directions = [(-2, 0), (2, 0), (0, -2), (0, 2)]
-    
-    while stack:
-        current_cell = stack[-1]
-        x, y = current_cell
+    :param width: Number of columns in the maze
+    :param height: Number of rows in the maze
+    :return: A 2D list representing the maze (0 for walls, 1 for paths)
+    """
+    # Create a grid filled with walls (0)
+    maze = [[0 for _ in range(width)] for _ in range(height)]
 
-        # Find all valid neighbors
-        neighbors = []
-        for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < height and 0 <= ny < width and maze[nx][ny] == 1:
-                neighbors.append((nx, ny))
-        
-        if neighbors:
-            # Choose a random neighbor
-            nx, ny = random.choice(neighbors)
-            
-            # Remove the wall between the current cell and the chosen neighbor
-            wall_x, wall_y = (x + nx) // 2, (y + ny) // 2
-            maze[wall_x][wall_y] = 0
-            
-            # Mark the neighbor as part of the maze
-            maze[nx][ny] = 0
-            
-            # Push the neighbor to the stack
-            stack.append((nx, ny))
-        else:
-            # Backtrack if no valid neighbors
-            stack.pop()
+    # Directions for moving in the maze: (row offset, column offset)
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    # Iterative Depth-First Search to carve the maze
+    def carve_passages_iterative(x, y):
+        stack = [(x, y)]  # Use a stack to avoid recursion limit
+        visited = set()
+        visited.add((x, y))
+        while stack:
+            cx, cy = stack[-1]  # Look at the top of the stack
+            maze[cy][cx] = 1  # Mark the current cell as a passage
+            random.shuffle(directions)  # Randomize directions
+            next_moves = []
+            for dx, dy in directions:
+                nx, ny = cx + dx * 2, cy + dy * 2
+                if 0 <= ny < height and 0 <= nx < width and (nx, ny) not in visited:
+                    next_moves.append((nx, ny, cx + dx, cy + dy))
+
+            if next_moves:
+                nx, ny, wall_x, wall_y = random.choice(next_moves)
+                maze[wall_y][wall_x] = 1  # Carve through the wall
+                stack.append((nx, ny))
+                visited.add((nx, ny))
+            else:
+                stack.pop()  # Backtrack if no moves are available
+
+    # Start carving from the top-left corner
+    carve_passages_iterative(0, 0)
+
+    # Ensure the bottom-right corner is part of the path
+    maze[height - 1][width - 1] = 1
 
     return maze
+
+# # Display the maze
+# def print_maze(maze):
+#     """Print the maze in a readable format."""
+#     for row in maze:
+#         print("".join(" █"[cell] for cell in row))
+
+# # Main function
+# if __name__ == "__main__":
+#     import sys
+
+#     # Allow dynamic input for large maze sizes
+#     try:
+#         size = int(input("Enter maze size (must be odd): "))
+#         if size % 2 == 0 :
+#             print("Size must be odd numbers.")
+#             sys.exit(1)
+#     except ValueError:
+#         print("Invalid input. Please enter integer values.")
+#         sys.exit(1)
+
+#     maze = generate_maze(size)
+#     print_maze(maze)
